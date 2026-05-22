@@ -38,6 +38,7 @@ jobs:
             -e "ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no" \
             --include='server/***' \
             --include='nginx/***' \
+            --include='scripts/***' \
             --include='docker-compose.prod.yml' \
             --exclude='server/node_modules' \
             --exclude='server/.env' \
