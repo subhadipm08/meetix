@@ -24,6 +24,7 @@ COPY --from=deps --chown=meetix:meetix /app/node_modules ./node_modules
 
 # Copy application source code
 COPY --chown=meetix:meetix src ./src
+COPY --chown=meetix:meetix public ./public
 COPY --chown=meetix:meetix package.json ./
 
 # Don't run as root
