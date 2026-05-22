@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  meetix-mongo:
+    image: mongo:7.0
+    container_name: meetix-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - meetix-mongo-data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGO_DB_NAME}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_DB_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_DB_PASSWORD}
+    networks:
+      - meetix-network
+
+  meetix-redis:
+    image: redis:7.2-alpine
+    container_name: meetix-redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    ports:
+      - "6379:6379"
+    volumes:
+      - meetix-redis-data:/data
+    networks:
+      - meetix-network
+
+volumes:
+  meetix-mongo-data:
+    driver: local
+  meetix-redis-data:
+    driver: local
+
+networks:
+  meetix-network:
+    driver: bridge
