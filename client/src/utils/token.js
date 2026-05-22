@@ -1,0 +1,39 @@
+const ACCESS_TOKEN_KEY = "meetix_access_token";
+const REFRESH_TOKEN_KEY = "meetix_refresh_token";
+
+export const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
+export const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
+
+export const setTokens = ({ accessToken, refreshToken }) => {
+  if (accessToken) localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+};
+
+export const clearTokens = () => {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+};
+
+export const decodeJwt = (token) => {
+  try {
+    const payload = token.split(".")[1];
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(normalized));
+  } catch {
+    return null;
+  }
+};
+
+export const userFromToken = (token) => {
+  const payload = decodeJwt(token);
+  if (!payload?._id) return null;
+
+  return {
+    _id: payload._id,
+    id: payload._id,
+    username: payload.username,
+    email: payload.email,
+    avatar: payload.avatar,
+    avatarlink: payload.avatar,
+  };
+};

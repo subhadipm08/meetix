@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #090b1f;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+button,
+a,
+input,
+select {
+  outline-offset: 3px;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-violetGlow px-4 py-2 text-sm font-black text-white shadow-glow transition hover:-translate-y-0.5 hover:bg-[#6a4bff] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center gap-2 rounded-lg border border-rose-300/30 bg-rose-500/20 px-4 py-2 text-sm font-bold text-rose-100 transition hover:-translate-y-0.5 hover:bg-rose-500/30;
+  }
+
+  .icon-button {
+    @apply grid h-11 w-11 place-items-center rounded-lg border border-white/10 bg-white/10 text-white transition hover:-translate-y-0.5 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0;
+  }
+
+  .panel {
+    @apply rounded-lg border border-white/10 bg-white/10 shadow-glow backdrop-blur-xl;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-white/10 bg-white/10 px-4 py-3 text-sm font-semibold text-white placeholder:text-white/35 transition focus:border-mintGlow/70 focus:bg-white/15;
+  }
+
+  .field-label {
+    @apply grid gap-2 text-sm font-bold text-white/70;
+  }
+
+  .eyebrow {
+    @apply text-sm font-black uppercase tracking-[0.18em] text-mintGlow;
+  }
+
+  .footer-link {
+    @apply flex min-h-11 items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-4 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/15 hover:text-white;
+  }
+
+  .profile-row {
+    @apply flex min-h-12 items-center gap-3 rounded-lg border border-white/10 bg-white/10 px-4 py-3 text-sm font-semibold text-white/70;
+  }
+
+  .chat-bubble {
+    @apply max-w-[84%] rounded-lg px-3 py-2 shadow-sm;
+  }
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at center, black, transparent 72%);
+}
