@@ -1,4 +1,4 @@
-import { CheckCircle2, Heart, Mail, ShieldCheck, Sparkles, UserRound } from "lucide-react";
+import { CheckCircle2, Heart, Mail, ShieldCheck, Sparkles, UserRound, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { register, verifyOtp } from "../services/api";
@@ -38,6 +38,7 @@ const AuthPage = ({ mode }) => {
   });
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { signIn, completeOtpLogin } = useAuth();
   const { pushToast } = useToast();
 
@@ -157,7 +158,16 @@ const AuthPage = ({ mode }) => {
 
             <label className="field-label">
               Password
-              <input className="input" name="password" type="password" value={form.password} onChange={update} required minLength={6} />
+              <div className="relative">
+                <input className="input pr-10 w-full" name="password" type={showPassword ? "text" : "password"} value={form.password} onChange={update} required minLength={6} />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
             </label>
 
             {otpSent && (
