@@ -6,10 +6,10 @@
   **Real-Time P2P Video Chat & Messaging Platform**
 
   [![Backend CI/CD](https://github.com/subhadipm08/meetix/actions/workflows/deploy-server.yml/badge.svg)](https://github.com/subhadipm08/meetix/actions)
-  [![Frontend Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?logo=vercel)](https://meetixchat.online)
+  [![Frontend Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?logo=vercel)](https://meetix-client.vercel.app/)
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-  [**View Live Demo**](https://meetixchat.online) • [**Report Bug**](https://github.com/subhadipm08/meetix/issues) • [**Request Feature**](https://github.com/subhadipm08/meetix/issues)
+  [**View Live Website**](https://meetix-client.vercel.app/) • [**Report Bug**](https://github.com/subhadipm08/meetix/issues) • [**Request Feature**](https://github.com/subhadipm08/meetix/issues)
 </div>
 
 ---
@@ -79,11 +79,12 @@ graph TD
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Socket.io](https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101)
+![Socket.io Client](https://img.shields.io/badge/Socket.io%20Client-black?style=for-the-badge&logo=socket.io&badgeColor=010101)
 
 ### Server (Backend)
 ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
 ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
+![Socket.io](https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101)
 ![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
 ![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
