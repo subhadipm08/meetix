@@ -1,0 +1,52 @@
+# ===========================
+# Node.js
+# ===========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===========================
+# Environment files (secrets)
+# ===========================
+.env
+.env.local
+.env.*.local
+.env.prod
+*.env.prod
+
+# ===========================
+# Build output
+# ===========================
+dist/
+build/
+
+# ===========================
+# IDE / Editor
+# ===========================
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ===========================
+# OS metadata
+# ===========================
+.DS_Store
+Thumbs.db
+
+# ===========================
+# Docker (runtime data — never commit)
+# ===========================
+*.pem
+ssl/
+
+# ===========================
+# Logs
+# ===========================
+logs/
+*.log

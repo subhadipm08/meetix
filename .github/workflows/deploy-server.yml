@@ -1,0 +1,84 @@
+name: Deploy Server to EC2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'nginx/**'
+      - 'docker-compose.prod.yml'
+  workflow_dispatch:
+
+env:
+  DEPLOY_DIR: /home/ubuntu/meetix
+
+jobs:
+  deploy-server:
+    name: Build & Deploy Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key.pem
+          chmod 600 ~/.ssh/ec2_key.pem
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Sync project files to EC2
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no" \
+            --include='server/***' \
+            --include='nginx/***' \
+            --include='docker-compose.prod.yml' \
+            --exclude='server/node_modules' \
+            --exclude='server/.env' \
+            --exclude='*' \
+            ./ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.DEPLOY_DIR }}/
+
+      - name: Create production .env and deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ${{ env.DEPLOY_DIR }}
+
+            # Create server production environment file from GitHub Secrets
+            cat > server/.env.prod << 'ENVEOF'
+            PORT=${{ secrets.SERVER_PORT }}
+            NODE_ENV=production
+            MONGODB_URI=${{ secrets.MONGODB_URI }}
+            REDIS_URI=${{ secrets.REDIS_URI }}
+            CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
+            ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
+            ACCESS_TOKEN_EXPIRY=${{ secrets.ACCESS_TOKEN_EXPIRY }}
+            REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
+            REFRESH_TOKEN_EXPIRY=${{ secrets.REFRESH_TOKEN_EXPIRY }}
+            EMAIL_USER=${{ secrets.EMAIL_USER }}
+            EMAIL_PASS=${{ secrets.EMAIL_PASS }}
+            EMAIL_FROM=${{ secrets.EMAIL_FROM }}
+            ENVEOF
+
+            # Remove leading whitespace from heredoc
+            sed -i 's/^[[:space:]]*//' server/.env.prod
+
+            # Make certbot entrypoint executable
+            chmod +x nginx/certbot-entrypoint.sh
+
+            # Build and restart only server + nginx containers
+            docker compose -f docker-compose.prod.yml build --no-cache meetix-server-1 meetix-server-2 nginx
+            docker compose -f docker-compose.prod.yml up -d --no-deps --force-recreate meetix-server-1 meetix-server-2 nginx
+
+            # Wait and verify containers are running
+            sleep 10
+            echo "=== Container Status ==="
+            docker compose -f docker-compose.prod.yml ps
+
+            # Cleanup old images to save disk space
+            docker image prune -f

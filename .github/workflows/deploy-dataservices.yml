@@ -1,0 +1,67 @@
+name: Deploy DataServices to EC2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'DataServices/**'
+      - 'docker-compose.prod.yml'
+  workflow_dispatch:
+
+env:
+  DEPLOY_DIR: /home/ubuntu/meetix
+
+jobs:
+  deploy-dataservices:
+    name: Deploy Data Services
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key.pem
+          chmod 600 ~/.ssh/ec2_key.pem
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Sync compose file to EC2
+        run: |
+          rsync -avz \
+            -e "ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no" \
+            docker-compose.prod.yml \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.DEPLOY_DIR }}/docker-compose.prod.yml
+
+      - name: Deploy data services on EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ${{ env.DEPLOY_DIR }}
+
+            # Create/update DataServices .env from GitHub Secrets
+            cat > .env.dataservices << 'ENVEOF'
+            MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}
+            MONGO_DB_USERNAME=${{ secrets.MONGO_DB_USERNAME }}
+            MONGO_DB_PASSWORD=${{ secrets.MONGO_DB_PASSWORD }}
+            ENVEOF
+
+            sed -i 's/^[[:space:]]*//' .env.dataservices
+
+            # Export variables so docker compose can use them
+            export $(cat .env.dataservices | xargs)
+
+            # Recreate only data containers (volumes are preserved)
+            docker compose -f docker-compose.prod.yml up -d --no-deps --force-recreate meetix-mongo meetix-redis
+
+            # Wait and verify
+            sleep 10
+            echo "=== Container Status ==="
+            docker compose -f docker-compose.prod.yml ps meetix-mongo meetix-redis
+
+            # Cleanup
+            docker image prune -f
