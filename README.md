@@ -1,40 +1,23 @@
-# Meetix 📹💬
+<div align="center">
+  <img src="https://raw.githubusercontent.com/subhadipm08/meetix/main/server/public/logo.png" alt="Meetix Logo" width="180" />
+  
+  # Meetix 📹💬
 
-Meetix is a dynamic, modern WebRTC-based platform designed for real-time video calls and instant messaging with random users worldwide. Leveraging peer-to-peer (P2P) connections, Meetix provides a seamless, low-latency communication experience directly within your web browser.
+  **Real-Time P2P Video Chat & Messaging Platform**
 
-> [!WARNING]
-> **Security & Privacy Note:** This application uses public **STUN servers** to facilitate WebRTC connection negotiation. STUN servers share your public IP address with the matching peer to establish a direct peer-to-peer media stream. For production environments, hosting and using **TURN servers** is highly recommended to relay traffic and fully mask client IP addresses.
+  [![Backend CI/CD](https://github.com/subhadipm08/meetix/actions/workflows/deploy-server.yml/badge.svg)](https://github.com/subhadipm08/meetix/actions)
+  [![Frontend Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?logo=vercel)](https://meetixchat.online)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+  [**View Live Demo**](https://meetixchat.online) • [**Report Bug**](https://github.com/subhadipm08/meetix/issues) • [**Request Feature**](https://github.com/subhadipm08/meetix/issues)
+</div>
 
 ---
 
-## 🏗️ Architecture Overview
+Meetix is a modern, WebRTC-powered platform designed for real-time video calls and instant messaging with users worldwide. Leveraging direct peer-to-peer (P2P) connections, Meetix provides a seamless, low-latency communication experience directly within your web browser.
 
-The system consists of a Vite-powered React frontend (client) and a Node.js/Express backend (server) serving as a REST API and a Socket.io signaling server. Redis handles cross-instance communication for WebSocket adapter scaling.
-
-```mermaid
-graph TD
-    subgraph Client [Frontend: React + Vite]
-        C1[UI / Video & Chat Components]
-        C2[WebRTC PeerConnection]
-        C3[Socket.io-client]
-    end
-    subgraph Server [Backend: Express + Socket.io]
-        S1[Express REST API / Auth]
-        S2[Socket.io Signaling Server]
-    end
-    subgraph Infrastructure [Infrastructure]
-        DB[(MongoDB)]
-        RD[(Redis Cache / Adapter)]
-        STUN((STUN Server))
-    end
-
-    C1 <-->|REST API| S1
-    C3 <-->|Signaling / Chat| S2
-    C2 <-->|ICE Negotiation| STUN
-    C2 <==>|Direct P2P Audio & Video| C2_Peer[Remote Peer]
-    S1 <-->|Mongoose| DB
-    S2 <-->|Redis Adapter| RD
-```
+> [!WARNING]
+> **Security & Privacy Note:** This application uses public **STUN servers** to facilitate WebRTC connection negotiation. STUN servers share your public IP address with the matching peer to establish a direct peer-to-peer media stream. For production environments, hosting and using **TURN servers** is highly recommended to relay traffic and fully mask client IP addresses.
 
 ---
 
@@ -43,127 +26,125 @@ graph TD
 - **🎥 Live P2P Video Calls:** Ultra-low latency video and audio communication powered by the WebRTC API.
 - **💬 Real-Time Chatting:** Integrated text messaging interface to chat alongside your video session.
 - **🔄 Random Matchmaking:** Intelligent signaling flow that pairs active users automatically.
-- **🔒 Secure Connections:** End-to-end media encryption (standard WebRTC security) and token-based REST authentication (JWT).
-- **🎨 Modern Responsive UI:** Premium dark mode UI styled with TailwindCSS, featuring smooth hover states and transition animations.
+- **🔒 Secure Connections:** End-to-end media encryption and JWT-based REST authentication.
+- **🛡️ Email Verification:** Secure OTP email verification system for new user registrations.
+- **🎨 Modern Premium UI:** Beautiful dark mode UI built with TailwindCSS, featuring glassmorphism, smooth hover states, and micro-animations.
+
+---
+
+## 🏗️ Architecture & Deployment
+
+Meetix is designed with a scalable, decoupled architecture and features fully automated CI/CD pipelines.
+
+<div align="center">
+
+```mermaid
+graph TD
+    subgraph Frontend [Frontend: Vercel]
+        C1[React + Vite App]
+        C2[WebRTC PeerConnection]
+    end
+    subgraph Backend [Backend: AWS EC2]
+        Nginx[NGINX Reverse Proxy]
+        S1[Node.js / Express API]
+        S2[Socket.io Signaling]
+        DB[(MongoDB Container)]
+        RD[(Redis Container)]
+    end
+    subgraph Infra [Global Infra]
+        STUN((STUN Servers))
+    end
+
+    User((User)) -->|HTTPS| C1
+    C1 -->|HTTPS REST| Nginx
+    C1 -->|WSS Sockets| Nginx
+    Nginx -->|Proxy| S1
+    Nginx -->|Proxy| S2
+    C2 <-->|ICE Negotiation| STUN
+    C2 <==>|Direct P2P Audio & Video| Remote[Remote Peer]
+    S1 <--> DB
+    S2 <--> RD
+```
+</div>
+
+- **Frontend:** Hosted globally on **Vercel** with automatic deployments on Git push.
+- **Backend:** Hosted on an **AWS EC2** instance running Dockerized MongoDB, Redis, and the Node.js API behind an NGINX reverse proxy with auto-renewing Let's Encrypt SSL certificates.
+- **CI/CD:** Automated via **GitHub Actions** for seamless continuous integration.
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Frontend (Client)
-- **Framework:** React 18 (Vite)
-- **Styling:** TailwindCSS & PostCSS
-- **Real-Time Client:** Socket.io-client
-- **Icons:** Lucide React
-- **Routing:** React Router DOM
+### Client (Frontend)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Socket.io](https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101)
 
-### Backend (Server)
-- **Runtime & Framework:** Node.js, Express 5 (Beta)
-- **Real-Time Signaling:** Socket.io (with `@socket.io/redis-adapter` for scaling)
-- **Database:** MongoDB (via Mongoose)
-- **Caching & Lock Manager:** Redis (via ioredis and redlock)
-- **Security:** bcryptjs, jsonwebtoken (JWT), express-rate-limit
+### Server (Backend)
+![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
+![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
+![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Getting Started Locally
 
 ### Prerequisites
-Make sure you have the following installed on your local machine:
-- **Node.js** (v18.0.0 or higher recommended)
-- **npm** (v9.0.0 or higher)
-- **MongoDB** (running locally or via MongoDB Atlas)
-- **Redis** (running locally or via a cloud provider)
+- **Node.js** (v18.0.0 or higher)
+- **MongoDB** (Local or Atlas)
+- **Redis** (Local or Cloud)
 
----
-
-### Installation & Setup
-
-#### 1. Clone the repository
+### 1. Clone & Install
 ```bash
-git clone <repository-url>
+git clone https://github.com/subhadipm08/meetix.git
 cd meetix
 ```
 
-#### 2. Configure the Backend Server
-1. Navigate to the `server` directory:
-   ```bash
-   cd server
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Set up the environment variables:
-   ```bash
-   cp .env.sample .env
-   ```
-4. Open the `.env` file and adjust your database and connection settings.
-5. Start the backend in development mode:
-   ```bash
-   npm run dev
-   ```
+### 2. Configure Backend
+```bash
+cd server
+npm install
+cp .env.sample .env
+# Edit .env with your MongoDB, Redis, and Email credentials
+npm run dev
+```
 
-#### 3. Configure the Frontend Client
-1. Navigate to the `client` directory:
-   ```bash
-   cd ../client
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Set up the environment variables:
-   ```bash
-   cp .env.sample .env
-   ```
-4. Adjust values inside `.env` to point to your backend API and WebSocket endpoints:
-   - `VITE_API_BASE_URL`: URL of the Express API (e.g., `http://localhost:8000/api/v1`)
-   - `VITE_SOCKET_URL`: URL of the Socket.io Server (e.g., `http://localhost:8000`)
-5. Start the frontend development server:
-   ```bash
-   npm run dev
-   ```
+### 3. Configure Frontend
+```bash
+cd ../client
+npm install
+cp .env.sample .env
+# Ensure VITE_API_BASE_URL and VITE_SOCKET_URL point to your local server
+npm run dev
+```
 
 ---
 
 ## ⚙️ Environment Variables
 
 ### Server (`server/.env`)
-| Variable | Description | Default / Example |
+| Variable | Description | Default |
 | :--- | :--- | :--- |
 | `PORT` | The port the Express/Socket.io server listens on | `8000` |
-| `NODE_ENV` | Running environment | `dev` |
 | `MONGODB_URI` | Connection URI for the MongoDB database | `mongodb://localhost:27017/meetixdb` |
 | `REDIS_URI` | Connection URI for the Redis server | `redis://localhost:6379` |
-| `CORS_ORIGIN` | Allowed origin for Cross-Origin Resource Sharing | `http://localhost:5173` |
-| `ACCESS_TOKEN_SECRET` | Secret key for signing Access JWTs | *Secure random string* |
-| `ACCESS_TOKEN_EXPIRY` | Access token duration | `1d` |
-| `REFRESH_TOKEN_SECRET`| Secret key for signing Refresh JWTs | *Secure random string* |
-| `REFRESH_TOKEN_EXPIRY`| Refresh token duration | `10d` |
-| `EMAIL_USER` | Email username for verification / mailers | `your_email@gmail.com` |
-| `EMAIL_PASS` | App password for Gmail / mail server | `your_app_password` |
-| `EMAIL_FROM` | From header for outgoing email | `Meetix <your_email@gmail.com>` |
+| `CORS_ORIGIN` | Allowed origin for CORS | `http://localhost:5173` |
+| `ACCESS_TOKEN_SECRET` | Secret key for signing Access JWTs | *Secure string* |
+| `EMAIL_USER` / `EMAIL_PASS`| Credentials for OTP emails | - |
 
 ### Client (`client/.env`)
-| Variable | Description | Default / Example |
+| Variable | Description | Default |
 | :--- | :--- | :--- |
-| `VITE_API_BASE_URL` | Base API endpoint for client fetch requests | `http://localhost:8000/api/v1` |
+| `VITE_API_BASE_URL` | Base API endpoint | `http://localhost:8000/api/v1` |
 | `VITE_SOCKET_URL` | Signaling server WebSocket endpoint | `http://localhost:8000` |
-| `VITE_GITHUB_PROFILE` | Link to the author's GitHub profile | `https://github.com/subhadipm08` |
 
 ---
 
 ## 🤝 Contributing
-
 This project is currently in a maintenance-only state. Contributions are not actively accepted at this time.
 
----
-
 ## 📄 License
-
-This project is open-sourced software licensed under the [MIT License](LICENSE) (or contact the owner for terms).
-
-## ⚠️ Notes for Production Deployment
-- **SSL/TLS (HTTPS & WSS):** WebRTC APIs require a secure context (HTTPS) to access webcams and microphones in browsers. Make sure your server is deployed behind an SSL-secured proxy (like Nginx, Cloudflare, or Caddy) and utilizes `wss://` for WebSockets.
-- **TURN Server Deployment:** Set up a TURN server (e.g., Coturn) to route media for clients located behind symmetric NATs or strict firewalls.
+This project is open-sourced software licensed under the [MIT License](LICENSE).
