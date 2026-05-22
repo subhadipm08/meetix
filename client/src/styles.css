@@ -49,6 +49,14 @@ select {
     @apply w-full rounded-lg border border-white/10 bg-white/10 px-4 py-3 text-sm font-semibold text-white placeholder:text-white/35 transition focus:border-mintGlow/70 focus:bg-white/15;
   }
 
+  .input:-webkit-autofill,
+  .input:-webkit-autofill:hover, 
+  .input:-webkit-autofill:focus, 
+  .input:-webkit-autofill:active {
+    -webkit-text-fill-color: white !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
   .field-label {
     @apply grid gap-2 text-sm font-bold text-white/70;
   }
