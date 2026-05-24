@@ -41,8 +41,8 @@ const LandingPage = () => {
             meetix
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-white/70 sm:text-xl">
-            A polished random video chat interface for quick stranger matching,
-            live text messages, and smooth automatic re-queueing when a partner leaves.
+            Connect instantly with people worldwide. Experience seamless video conversations,
+            real-time messaging, and endless new connections in just one click.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Link to={isAuthenticated ? "/lobby" : "/register"} className="btn-primary px-6 py-3 text-base">
@@ -96,7 +96,7 @@ const LandingPage = () => {
           </div>
           <div className="absolute right-10 top-7 flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-4 py-3 text-sm font-semibold text-white backdrop-blur">
             {isAuthenticated ? <RadioTower className="h-4 w-4 text-mintGlow" /> : <ShieldCheck className="h-4 w-4 text-mintGlow" />}
-            {isAuthenticated ? "Live socket stats" : "Public stats refresh every 10s"}
+            {isAuthenticated ? "Live Platform Stats" : "Stats refresh every 10s"}
           </div>
         </div>
       </div>

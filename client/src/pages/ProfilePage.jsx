@@ -21,30 +21,42 @@ const ProfilePage = () => {
               <div>
                 <h1 className="text-4xl font-black">{user?.username}</h1>
                 <p className="mt-3 max-w-xl text-white/60">
-                  Your Meetix session is restored from the access token and used for authenticated
-                  Socket.io matching.
+                  Welcome to your Meetix profile. You're ready to start meeting new people
+                  and joining conversations.
                 </p>
                 <Link to="/lobby" className="btn-primary mt-6 px-6 py-3 text-base">
                   <MessageCircle className="h-5 w-5" />
                   Start chat
                 </Link>
               </div>
-              <div className="grid gap-3">
-                <div className="profile-row">
-                  <UserRound className="h-5 w-5 text-mintGlow" />
-                  <span>{user?.id}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4 shadow-sm transition hover:bg-white/10">
+                  <div className="mb-2 flex items-center gap-2">
+                    <UserRound className="h-5 w-5 text-mintGlow" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-white/50">User ID</span>
+                  </div>
+                  <span className="text-sm font-semibold text-white/90 break-all">{user?.id}</span>
                 </div>
-                <div className="profile-row">
-                  <Mail className="h-5 w-5 text-mintGlow" />
-                  <span>{user?.email || "Email is not present in token"}</span>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4 shadow-sm transition hover:bg-white/10">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Mail className="h-5 w-5 text-mintGlow" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-white/50">Email</span>
+                  </div>
+                  <span className="text-sm font-semibold text-white/90">{user?.email || "Not provided"}</span>
                 </div>
-                <div className="profile-row">
-                  <RadioTower className="h-5 w-5 text-mintGlow" />
-                  <span>{socket?.connected ? "Socket connected" : "Socket offline"}</span>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4 shadow-sm transition hover:bg-white/10">
+                  <div className="mb-2 flex items-center gap-2">
+                    <RadioTower className="h-5 w-5 text-mintGlow" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-white/50">Network Status</span>
+                  </div>
+                  <span className="text-sm font-semibold text-white/90">{socket?.connected ? "Online & Ready" : "Connecting..."}</span>
                 </div>
-                <div className="profile-row">
-                  <ShieldCheck className="h-5 w-5 text-mintGlow" />
-                  <span>Authenticated lobby access</span>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4 shadow-sm transition hover:bg-white/10">
+                  <div className="mb-2 flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-mintGlow" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-white/50">Account Status</span>
+                  </div>
+                  <span className="text-sm font-semibold text-white/90">Verified Member</span>
                 </div>
               </div>
             </div>
