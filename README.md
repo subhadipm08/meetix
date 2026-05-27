@@ -6,10 +6,10 @@
   **Real-Time P2P Video Chat & Messaging Platform**
 
   [![Backend CI/CD](https://github.com/subhadipm08/meetix/actions/workflows/deploy-server.yml/badge.svg)](https://github.com/subhadipm08/meetix/actions)
-  [![Frontend Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?logo=vercel)](https://meetix-client.vercel.app/)
+  [![Frontend Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?logo=vercel)](https://meetixchat.vercel.app/)
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-  [**View Live Website**](https://meetix-client.vercel.app/) • [**Report Bug**](https://github.com/subhadipm08/meetix/issues) • [**Request Feature**](https://github.com/subhadipm08/meetix/issues)
+  [**View Live Website**](https://meetixchat.vercel.app/) • [**Report Bug**](https://github.com/subhadipm08/meetix/issues) • [**Request Feature**](https://github.com/subhadipm08/meetix/issues)
 </div>
 
 ---
