@@ -5,6 +5,7 @@
 
   **Real-Time P2P Video Chat & Messaging Platform**
 
+  [![EC2 Init](https://github.com/subhadipm08/meetix/actions/workflows/deploy-dataservices.yml/badge.svg)](https://github.com/subhadipm08/meetix/actions)
   [![Backend CI/CD](https://github.com/subhadipm08/meetix/actions/workflows/deploy-server.yml/badge.svg)](https://github.com/subhadipm08/meetix/actions)
   [![Frontend Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?logo=vercel)](https://meetixchat.vercel.app/)
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -68,8 +69,9 @@ graph TD
 </div>
 
 - **Frontend:** Hosted globally on **Vercel** with automatic deployments on Git push.
-- **Backend:** Hosted on an **AWS EC2** instance running Dockerized MongoDB, Redis, and the Node.js API behind an NGINX reverse proxy with auto-renewing Let's Encrypt SSL certificates.
-- **CI/CD:** Automated via **GitHub Actions** for seamless continuous integration.
+- **Backend:** Hosted on an **AWS EC2** instance running Dockerized MongoDB, Redis, two Node.js API instances, NGINX, and Certbot.
+- **SSL:** Let's Encrypt certificates are initialized during infrastructure setup and renewed automatically by the Certbot container.
+- **CI/CD:** Automated via two **GitHub Actions** workflows: one for EC2 infrastructure initialization and one for backend server deployments.
 
 ---
 
@@ -141,6 +143,123 @@ npm run dev
 | :--- | :--- | :--- |
 | `VITE_API_BASE_URL` | Base API endpoint | `http://localhost:8000/api/v1` |
 | `VITE_SOCKET_URL` | Signaling server WebSocket endpoint | `http://localhost:8000` |
+
+---
+
+## Production Deployment
+
+The production backend runs on EC2 with Docker Compose. Deployment is split into two workflows so first-time infrastructure setup and normal backend releases stay separate.
+
+### EC2 Security Group
+
+Only expose the reverse proxy and SSH:
+
+```text
+HTTP   80    0.0.0.0/0
+HTTPS  443   0.0.0.0/0
+SSH    22    your-ip/32
+```
+
+Do not expose Node, MongoDB, or Redis directly:
+
+```text
+8000   Node.js backend
+27017  MongoDB
+6379   Redis
+```
+
+### Production Environment
+
+Production uses one generated env file on EC2:
+
+```text
+/home/ubuntu/meetix/.env.prod
+```
+
+Both workflows create/update this file from GitHub Actions secrets. The expected shape is documented in `.env.prod.example`.
+
+Required GitHub Actions secrets:
+
+| Secret | Purpose |
+| :--- | :--- |
+| `EC2_HOST` | EC2 public IP or backend domain |
+| `EC2_USER` | SSH user, usually `ubuntu` |
+| `EC2_SSH_KEY` | Private key used by GitHub Actions to SSH into EC2 |
+| `SERVER_PORT` | Backend port, normally `8000` |
+| `MONGO_DB_NAME` | MongoDB database name |
+| `MONGO_DB_USERNAME` | MongoDB root/user name |
+| `MONGO_DB_PASSWORD` | MongoDB password |
+| `MONGODB_URI` | Mongo URI, for Docker use `mongodb://user:pass@meetix-mongo:27017/db?authSource=admin` |
+| `REDIS_URI` | Redis URI, for Docker use `redis://meetix-redis:6379` |
+| `CORS_ORIGIN` | Allowed frontend origin, for example `https://meetixchat.vercel.app` |
+| `ACCESS_TOKEN_SECRET` | JWT access token secret |
+| `ACCESS_TOKEN_EXPIRY` | Access token lifetime |
+| `REFRESH_TOKEN_SECRET` | JWT refresh token secret |
+| `REFRESH_TOKEN_EXPIRY` | Refresh token lifetime |
+| `EMAIL_USER` | Email account used for OTP email |
+| `EMAIL_PASS` | Email app password |
+| `EMAIL_FROM` | Sender label, for example `Meetix <vchat.app.dev@gmail.com>` |
+| `LETSENCRYPT_EMAIL` | Optional SSL registration email. Falls back to `EMAIL_USER` when omitted |
+
+### Workflow 1: Initialize EC2 Infrastructure
+
+Run **Initialize EC2 Infrastructure** when setting up a fresh EC2 instance or changing infrastructure-level files such as `docker-compose.prod.yml`, `nginx/**`, or `scripts/init-ssl.sh`.
+
+This workflow:
+
+- syncs deployment files to `/home/ubuntu/meetix`
+- creates `/home/ubuntu/meetix/.env.prod`
+- starts MongoDB and Redis
+- obtains or reuses the Let's Encrypt certificate
+- starts NGINX and Certbot renewal
+
+After it succeeds, EC2 should show these infrastructure containers:
+
+```text
+meetix-mongo
+meetix-redis
+meetix-nginx
+meetix-certbot
+```
+
+### Workflow 2: Deploy Server to EC2
+
+Run **Deploy Server to EC2** for normal backend releases. It also runs automatically on `main` pushes that touch `server/**`, `nginx/**`, or `docker-compose.prod.yml`.
+
+This workflow:
+
+- syncs backend deployment files
+- refreshes `/home/ubuntu/meetix/.env.prod`
+- rebuilds and restarts `meetix-server-1` and `meetix-server-2`
+- reloads NGINX when it is already running
+
+After both workflows have run successfully, EC2 should have:
+
+```text
+meetix-nginx
+meetix-certbot
+meetix-server-1
+meetix-server-2
+meetix-mongo
+meetix-redis
+```
+
+Verify the deployment:
+
+```bash
+curl http://localhost/health
+curl https://meetixchat.online/health
+curl https://meetixchat.online/api/v1/stats
+```
+
+### Frontend Production URLs
+
+In Vercel, point the frontend to the EC2 backend domain:
+
+```env
+VITE_API_BASE_URL=https://meetixchat.online/api/v1
+VITE_SOCKET_URL=https://meetixchat.online
+```
 
 ---
 
