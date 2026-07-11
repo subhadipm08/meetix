@@ -42,10 +42,11 @@ jobs:
             --include='docker-compose.prod.yml' \
             --exclude='server/node_modules' \
             --exclude='server/.env' \
+            --exclude='.env.prod' \
             --exclude='*' \
             ./ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.DEPLOY_DIR }}/
 
-      - name: Create production .env and deploy
+      - name: Deploy backend servers
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -54,10 +55,13 @@ jobs:
           script: |
             cd ${{ env.DEPLOY_DIR }}
 
-            # Create server production environment file from GitHub Secrets
-            cat > server/.env.prod << 'ENVEOF'
+            # Keep one production environment file shared by Compose, data services, and backend.
+            cat > .env.prod << 'ENVEOF'
             PORT=${{ secrets.SERVER_PORT }}
             NODE_ENV=production
+            MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}
+            MONGO_DB_USERNAME=${{ secrets.MONGO_DB_USERNAME }}
+            MONGO_DB_PASSWORD=${{ secrets.MONGO_DB_PASSWORD }}
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             REDIS_URI=${{ secrets.REDIS_URI }}
             CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
@@ -71,19 +75,23 @@ jobs:
             ENVEOF
 
             # Remove leading whitespace from heredoc
-            sed -i 's/^[[:space:]]*//' server/.env.prod
+            sed -i 's/^[[:space:]]*//' .env.prod
+            chmod 600 .env.prod
 
             # Make certbot entrypoint executable
             chmod +x nginx/certbot-entrypoint.sh
 
-            # Build and restart only server + nginx containers
-            docker compose -f docker-compose.prod.yml build --no-cache meetix-server-1 meetix-server-2 nginx
-            docker compose -f docker-compose.prod.yml up -d --no-deps --force-recreate meetix-server-1 meetix-server-2 nginx
+            # Build and restart only backend containers; Nginx/Certbot are initialized separately.
+            docker compose --env-file .env.prod -f docker-compose.prod.yml build --no-cache meetix-server-1 meetix-server-2
+            docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --no-deps --force-recreate meetix-server-1 meetix-server-2
+
+            # Reload Nginx if init has already started it.
+            docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
 
             # Wait and verify containers are running
             sleep 10
             echo "=== Container Status ==="
-            docker compose -f docker-compose.prod.yml ps
+            docker compose --env-file .env.prod -f docker-compose.prod.yml ps
 
             # Cleanup old images to save disk space
             docker image prune -f

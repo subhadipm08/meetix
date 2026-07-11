@@ -1,4 +1,4 @@
-name: Deploy DataServices to EC2
+name: Initialize EC2 Infrastructure
 
 on:
   push:
@@ -7,14 +7,15 @@ on:
       - 'DataServices/**'
       - 'docker-compose.prod.yml'
       - 'scripts/init-ssl.sh'
+      - 'nginx/**'
   workflow_dispatch:
 
 env:
   DEPLOY_DIR: /home/ubuntu/meetix
 
 jobs:
-  deploy-dataservices:
-    name: Deploy Data Services
+  init-infrastructure:
+    name: Initialize Data, SSL, Nginx, and Certbot
     runs-on: ubuntu-latest
 
     steps:
@@ -32,18 +33,21 @@ jobs:
         run: |
           ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ${{ env.DEPLOY_DIR }}/scripts"
 
-      - name: Sync compose file and SSL init script to EC2
+      - name: Sync deployment files to EC2
         run: |
-          rsync -avz \
+          rsync -avz --delete \
             -e "ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no" \
-            docker-compose.prod.yml \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.DEPLOY_DIR }}/docker-compose.prod.yml
-          rsync -avz \
-            -e "ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no" \
-            scripts/init-ssl.sh \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.DEPLOY_DIR }}/scripts/init-ssl.sh
+            --include='server/***' \
+            --include='nginx/***' \
+            --include='scripts/***' \
+            --include='docker-compose.prod.yml' \
+            --exclude='server/node_modules' \
+            --exclude='server/.env' \
+            --exclude='.env.prod' \
+            --exclude='*' \
+            ./ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.DEPLOY_DIR }}/
 
-      - name: Deploy data services on EC2
+      - name: Initialize infrastructure on EC2
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -53,26 +57,41 @@ jobs:
             cd ${{ env.DEPLOY_DIR }}
 
             chmod +x scripts/init-ssl.sh
+            chmod +x nginx/certbot-entrypoint.sh
 
-            # Create/update DataServices .env from GitHub Secrets
-            cat > .env.dataservices << 'ENVEOF'
+            # Single production environment file for Compose, data services, and backend.
+            cat > .env.prod << 'ENVEOF'
+            PORT=${{ secrets.SERVER_PORT }}
+            NODE_ENV=production
             MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}
             MONGO_DB_USERNAME=${{ secrets.MONGO_DB_USERNAME }}
             MONGO_DB_PASSWORD=${{ secrets.MONGO_DB_PASSWORD }}
+            MONGODB_URI=${{ secrets.MONGODB_URI }}
+            REDIS_URI=${{ secrets.REDIS_URI }}
+            CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
+            ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
+            ACCESS_TOKEN_EXPIRY=${{ secrets.ACCESS_TOKEN_EXPIRY }}
+            REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
+            REFRESH_TOKEN_EXPIRY=${{ secrets.REFRESH_TOKEN_EXPIRY }}
+            EMAIL_USER=${{ secrets.EMAIL_USER }}
+            EMAIL_PASS=${{ secrets.EMAIL_PASS }}
+            EMAIL_FROM=${{ secrets.EMAIL_FROM }}
             ENVEOF
 
-            sed -i 's/^[[:space:]]*//' .env.dataservices
+            sed -i 's/^[[:space:]]*//' .env.prod
+            chmod 600 .env.prod
 
-            # Export variables so docker compose can use them
-            export $(cat .env.dataservices | xargs)
+            docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --no-deps --force-recreate meetix-mongo meetix-redis
 
-            # Recreate only data containers (volumes are preserved)
-            docker compose -f docker-compose.prod.yml up -d --no-deps --force-recreate meetix-mongo meetix-redis
+            ./scripts/init-ssl.sh "${{ secrets.LETSENCRYPT_EMAIL || secrets.EMAIL_USER }}"
+
+            docker compose --env-file .env.prod -f docker-compose.prod.yml build nginx
+            docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --no-deps --force-recreate nginx certbot
 
             # Wait and verify
             sleep 10
             echo "=== Container Status ==="
-            docker compose -f docker-compose.prod.yml ps meetix-mongo meetix-redis
+            docker compose --env-file .env.prod -f docker-compose.prod.yml ps meetix-mongo meetix-redis nginx certbot
 
             # Cleanup
             docker image prune -f

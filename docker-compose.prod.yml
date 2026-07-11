@@ -58,7 +58,7 @@ services:
     container_name: meetix-server-1
     restart: unless-stopped
     env_file:
-      - ./server/.env.prod
+      - ./.env.prod
     environment:
       - NODE_ENV=production
     depends_on:
@@ -86,7 +86,7 @@ services:
     container_name: meetix-server-2
     restart: unless-stopped
     env_file:
-      - ./server/.env.prod
+      - ./.env.prod
     environment:
       - NODE_ENV=production
     depends_on:
@@ -122,11 +122,6 @@ services:
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
-    depends_on:
-      meetix-server-1:
-        condition: service_healthy
-      meetix-server-2:
-        condition: service_healthy
     networks:
       - meetix-network
     deploy:

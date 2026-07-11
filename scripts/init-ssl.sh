@@ -19,9 +19,18 @@ echo "[1/4] Creating directories..."
 sudo mkdir -p /var/www/certbot
 sudo mkdir -p /etc/letsencrypt
 
+if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ] && [ -f "/etc/letsencrypt/live/$DOMAIN/privkey.pem" ]; then
+    echo "[2/4] Existing SSL certificate found. Skipping certificate request."
+    echo "[3/4] Certificate is ready."
+    echo "[4/4] No temporary Nginx cleanup needed."
+    exit 0
+fi
+
 # 2. Create a temporary Nginx config that only serves HTTP
 #    (so Certbot can verify domain ownership via ACME challenge)
 echo "[2/4] Starting temporary Nginx for ACME challenge..."
+
+docker rm -f temp-nginx 2>/dev/null || true
 
 docker run -d --rm \
     --name temp-nginx \
@@ -75,5 +84,5 @@ echo "  SSL certificate obtained successfully!"
 echo "  Certificate: /etc/letsencrypt/live/$DOMAIN/"
 echo ""
 echo "  Now start the full stack:"
-echo "    docker compose -f docker-compose.prod.yml up -d"
+echo "    docker compose --env-file .env.prod -f docker-compose.prod.yml up -d"
 echo "============================================="
