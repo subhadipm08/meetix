@@ -6,6 +6,7 @@ on:
     paths:
       - 'DataServices/**'
       - 'docker-compose.prod.yml'
+      - 'scripts/init-ssl.sh'
   workflow_dispatch:
 
 env:
