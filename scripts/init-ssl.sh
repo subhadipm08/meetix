@@ -23,11 +23,11 @@ sudo mkdir -p /etc/letsencrypt
 #    (so Certbot can verify domain ownership via ACME challenge)
 echo "[2/4] Starting temporary Nginx for ACME challenge..."
 
-docker compose -f docker-compose.prod.yml run -d --rm \
+docker run -d --rm \
     --name temp-nginx \
     -p 80:80 \
     -v /var/www/certbot:/var/www/certbot \
-    nginx sh -c "
+    nginx:alpine sh -c "
 cat > /etc/nginx/nginx.conf << 'NGINXCONF'
 events { worker_connections 64; }
 http {
